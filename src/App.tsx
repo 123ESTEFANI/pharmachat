@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useMedsStore } from './stores/medsStore';
 import { useEffect } from 'react';
 import Admin from './pages/Admin';
@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 // Contraseña del admin
 const ADMIN_PASSWORD = 'Farmafamiliaestefani.25';
 
-function ChatPage({ onAdminClick }: { onAdminClick: () => void }) {
+function ChatPage() {
   const { fetchMeds } = useMedsStore();
 
   useEffect(() => { fetchMeds(); }, []);
@@ -48,13 +48,13 @@ function ChatPage({ onAdminClick }: { onAdminClick: () => void }) {
               <p className="text-white/50 text-xs">Farma Familia</p>
             </div>
           </div>
-          <button
-            onClick={onAdminClick}
+          <a
+            href="/admin-login"
             className="p-2.5 text-white/50 hover:text-white hover:bg-white/10 rounded-xl transition-all"
             title="Administración"
           >
             <Settings size={20} />
-          </button>
+          </a>
         </div>
       </div>
 
@@ -139,7 +139,7 @@ function ChatPage({ onAdminClick }: { onAdminClick: () => void }) {
   );
 }
 
-function AdminLogin({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
+function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
 
@@ -189,7 +189,7 @@ function AdminLogin({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: 
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={onCancel}
+              onClick={() => window.history.back()}
               className="flex-1 px-4 py-2.5 text-sm text-white/70 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
             >
               Cancelar
@@ -208,25 +208,35 @@ function AdminLogin({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: 
 }
 
 export default function App() {
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  if (showAdminLogin && !isAdmin) {
+  if (!isAdmin) {
     return (
-      <AdminLogin
-        onSuccess={() => { setIsAdmin(true); setShowAdminLogin(false); }}
-        onCancel={() => setShowAdminLogin(false)}
-      />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<ChatPage />} />
+          <Route path="/admin-login" element={
+            <AdminLoginWithNavigate onLogin={() => setIsAdmin(true)} />
+          } />
+          <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </BrowserRouter>
     );
   }
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ChatPage onAdminClick={() => setShowAdminLogin(true)} />} />
-        <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" />} />
+        <Route path="/" element={<ChatPage onAdminClick={() => {}} />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
+}
+
+function AdminLoginWithNavigate({ onLogin }: { onLogin: () => void }) {
+  const navigate = useNavigate();
+  return <AdminLogin onSuccess={() => { onLogin(); navigate('/admin'); }} />;
 }
