@@ -25,9 +25,14 @@ export default function Admin() {
 
   const loadData = async () => {
     setLoading(true);
-    const [medsRes, usersRes] = await Promise.all([fetchAllMedicamentos(), fetchUsuarios()]);
-    if (medsRes.data) setMedicamentos(medsRes.data);
-    if (usersRes.data) setUsuarios(usersRes.data);
+    try {
+      const medsRes = await fetchAllMedicamentos();
+      console.log('Admin - Medicamentos:', medsRes);
+      if (medsRes.data) setMedicamentos(medsRes.data);
+      if (medsRes.error) console.error('Admin - Error medicamentos:', medsRes.error);
+    } catch (err) {
+      console.error('Admin - Error cargando datos:', err);
+    }
     setLoading(false);
   };
 
