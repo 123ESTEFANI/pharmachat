@@ -210,26 +210,14 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
 
-  if (!isAdmin) {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<ChatPage />} />
-          <Route path="/admin-login" element={
-            <AdminLoginWithNavigate onLogin={() => setIsAdmin(true)} />
-          } />
-          <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ChatPage onAdminClick={() => {}} />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/" element={<ChatPage />} />
+        <Route path="/admin-login" element={
+          <AdminLoginWithNavigate onLogin={() => setIsAdmin(true)} />
+        } />
+        <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/admin-login" />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
@@ -238,5 +226,9 @@ export default function App() {
 
 function AdminLoginWithNavigate({ onLogin }: { onLogin: () => void }) {
   const navigate = useNavigate();
-  return <AdminLogin onSuccess={() => { onLogin(); navigate('/admin'); }} />;
+  const handleSuccess = () => {
+    onLogin();
+    setTimeout(() => navigate('/admin'), 100);
+  };
+  return <AdminLogin onSuccess={handleSuccess} />;
 }
