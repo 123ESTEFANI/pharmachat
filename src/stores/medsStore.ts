@@ -19,9 +19,11 @@ export const useMedsStore = create<MedsState>((set) => ({
     set({ loading: true });
     const { data, error } = await fetchFromDb();
     if (error) {
+      console.error('Error cargando medicamentos:', error);
       set({ loading: false, error: error.message });
       return;
     }
+    console.log('Medicamentos cargados:', data);
     const meds = data || [];
     initSearch(meds);
     set({ medicamentos: meds, loading: false });
