@@ -24,13 +24,25 @@ export const getCurrentUser = async () => {
   return user;
 };
 
-// Medicamentos - ahora solo una columna de texto
+// Medicamentos - una sola columna de texto.
+// OJO: según cómo se creó la tabla, la columna puede llamarse 'medicamentos'
+// o 'medicamento' (singular). El código maneja ambos nombres.
+
+const normalizeRow = (row: any): Medicamento => ({
+  id: row?.id ?? '',
+  medicamentos: row?.medicamentos ?? row?.medicamento ?? '',
+});
+
+const isColumnError = (error: any) =>
+  !!error && /column/i.test(error.message || '');
+
 export const fetchMedicamentos = async () => {
   const { data, error } = await supabase
     .from('medicamentos')
     .select('*')
     .order('id');
-  return { data: data as Medicamento[] | null, error };
+  const meds = (data || []).map(normalizeRow);
+  return { data: meds, error };
 };
 
 export const fetchAllMedicamentos = async () => {
@@ -38,26 +50,51 @@ export const fetchAllMedicamentos = async () => {
     .from('medicamentos')
     .select('*')
     .order('id');
-  return { data: data as Medicamento[] | null, error };
+  const meds = (data || []).map(normalizeRow);
+  return { data: meds, error };
 };
 
 export const insertMedicamento = async (texto: string) => {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('medicamentos')
     .insert([{ medicamentos: texto }])
     .select()
     .single();
-  return { data, error };
+
+  // Si la columna se llama 'medicamento' (singular), reintentar
+  if (isColumnError(error)) {
+    const res = await supabase
+      .from('medicamentos')
+      .insert([{ medicamento: texto }])
+      .select()
+      .single();
+    data = res.data;
+    error = res.error;
+  }
+
+  return { data: data ? normalizeRow(data) : null, error };
 };
 
 export const updateMedicamento = async (id: string, texto: string) => {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('medicamentos')
     .update({ medicamentos: texto })
     .eq('id', id)
     .select()
     .single();
-  return { data, error };
+
+  if (isColumnError(error)) {
+    const res = await supabase
+      .from('medicamentos')
+      .update({ medicamento: texto })
+      .eq('id', id)
+      .select()
+      .single();
+    data = res.data;
+    error = res.error;
+  }
+
+  return { data: data ? normalizeRow(data) : null, error };
 };
 
 export const deleteMedicamento = async (id: string) => {
@@ -68,12 +105,11 @@ export const deleteMedicamento = async (id: string) => {
   return { error };
 };
 
-// Usuarios
+// Usuarios (sin uso activo; sin order por columnas inexistentes)
 export const fetchUsuarios = async () => {
   const { data, error } = await supabase
     .from('usuarios')
-    .select('*')
-    .order('nombre');
+    .select('*');
   return { data: data as Usuario[] | null, error };
 };
 
