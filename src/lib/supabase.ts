@@ -34,7 +34,7 @@ const normalizeRow = (row: any): Medicamento => ({
 });
 
 const isColumnError = (error: any) =>
-  !!error && /column/i.test(error.message || '');
+  !!error && /could not find the 'medicamentos' column/i.test(error.message || '');
 
 export const fetchMedicamentos = async () => {
   const { data, error } = await supabase

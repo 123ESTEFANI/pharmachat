@@ -21,6 +21,7 @@ export default function Admin() {
   const [editingMed, setEditingMed] = useState<Medicamento | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { fetchMeds } = useMedsStore();
 
   const loadData = async () => {
@@ -28,10 +29,15 @@ export default function Admin() {
     try {
       const medsRes = await fetchAllMedicamentos();
       console.log('Admin - Medicamentos:', medsRes);
-      if (medsRes.data) setMedicamentos(medsRes.data);
-      if (medsRes.error) console.error('Admin - Error medicamentos:', medsRes.error);
-    } catch (err) {
+      if (medsRes.error) {
+        setError(medsRes.error.message);
+      } else {
+        setError(null);
+        setMedicamentos(medsRes.data || []);
+      }
+    } catch (err: any) {
       console.error('Admin - Error cargando datos:', err);
+      setError(err?.message || 'Error de conexión con la base de datos');
     }
     setLoading(false);
   };
@@ -39,14 +45,16 @@ export default function Admin() {
   useEffect(() => { loadData(); }, []);
 
   const filteredMeds = medicamentos.filter(m =>
-    m.medicamentos.toLowerCase().includes(searchTerm.toLowerCase())
+    (m.medicamentos || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSave = async (texto: string) => {
-    if (editingMed) {
-      await updateMedicamento(editingMed.id, texto);
-    } else {
-      await insertMedicamento(texto);
+    const res = editingMed
+      ? await updateMedicamento(editingMed.id, texto)
+      : await insertMedicamento(texto);
+    if (res.error) {
+      alert('Error al guardar en la base de datos:\n\n' + res.error.message);
+      return;
     }
     setShowForm(false);
     setEditingMed(null);
@@ -105,6 +113,18 @@ export default function Admin() {
             </button>
           ))}
         </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-300 text-red-700 rounded-xl p-4 mb-4 text-sm">
+            <strong>⚠️ Error de base de datos:</strong> {error}
+            <button
+              onClick={loadData}
+              className="ml-3 underline text-red-800 hover:text-red-900"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
