@@ -90,13 +90,26 @@ const detectarTema = (q: string): RegExp | null => {
 const extraerSeccion = (texto: string, tema: RegExp): string | null => {
   const lineas = texto.split(/\r?\n/);
   const inicio = lineas.findIndex(l => tema.test(l) && esEncabezado(l));
-  if (inicio === -1) return null;
-  const partes: string[] = [lineas[inicio]];
-  for (let i = inicio + 1; i < lineas.length; i++) {
-    if (esEncabezado(lineas[i]) && !tema.test(lineas[i])) break;
-    partes.push(lineas[i]);
+  if (inicio !== -1) {
+    const partes: string[] = [lineas[inicio]];
+    for (let i = inicio + 1; i < lineas.length; i++) {
+      if (esEncabezado(lineas[i]) && !tema.test(lineas[i])) break;
+      partes.push(lineas[i]);
+    }
+    return partes.join('\n').trim();
   }
-  return partes.join('\n').trim();
+
+  // Respaldo: si no hay encabezado, buscar las líneas que contienen el tema
+  // directamente (ej: "Registro Sanitario Hepax: https://...")
+  const idx = lineas.findIndex(l => l.trim().length > 0 && tema.test(l));
+  if (idx === -1) return null;
+  const partes: string[] = [lineas[idx].trim()];
+  for (let j = idx + 1; j < lineas.length && partes.length < 6; j++) {
+    const l = lineas[j].trim();
+    if (!l || esEncabezado(l)) break;
+    partes.push(l);
+  }
+  return partes.join('\n');
 };
 
 // Nombre del producto = primera línea sin numeración (ej: "9- Fitodol" -> "Fitodol")
