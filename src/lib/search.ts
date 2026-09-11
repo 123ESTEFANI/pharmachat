@@ -29,6 +29,8 @@ const PALABRAS_COMUNES = new Set([
   'secundarios', 'secundario', 'componentes', 'componente', 'ingredientes',
   'ingrediente', 'registro', 'sanitario', 'cucharaditas', 'cucharadita',
   'veces', 'cuesta', 'costo', 'costos', 'cuando', 'cuantas',
+  'indicaciones', 'presentacion', 'presentación',
+  'precauciones', 'precaucion', 'advertencia', 'cuidado', 'indicado',
 ]);
 
 const palabrasClave = (q: string) =>
@@ -83,6 +85,10 @@ const detectarTema = (q: string): RegExp | null => {
   if (/\b(efectos|secundari|reacciones)/.test(q)) return /efectos/i;
   if (/\b(componente|ingrediente)/.test(q)) return /componente/i;
   if (/\b(registro|sanitario)/.test(q)) return /registro\s+sanitario/i;
+  if (/\b(beneficios?|beneficia|beneficioso)/.test(q)) return /beneficios/i;
+  if (/\b(indicaciones|para que sirve|indicado)/.test(q)) return /beneficios/i;
+  if (/\b(presentacion|presentaci)/.test(q)) return /presentaci/i;
+  if (/\b(precaucion|precauciones|cuidado|advertencia)/.test(q)) return /precaucion/i;
   return null;
 };
 
